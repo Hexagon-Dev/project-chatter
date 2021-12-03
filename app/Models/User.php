@@ -16,7 +16,17 @@ class User extends Authenticatable
 
     protected $guarded = [];
 
+    protected $hidden = ['password'];
+
     public $timestamps = false;
+    /**
+     * @var mixed
+     */
+    private $project_id;
+    /**
+     * @var mixed
+     */
+    private $id;
 
     public function setPasswordAttribute($value): void
     {

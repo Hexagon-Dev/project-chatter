@@ -2,64 +2,33 @@
 
 namespace App\Services;
 
-use App\Http\Requests\SendMessageRequest;
+use App\Models\Chat;
 use App\Models\Message;
-use Illuminate\Support\Collection;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
 
 class MessageService extends UserService
 {
-    public function showOne($messageId)
+    public function showAllWithUser($chatId): array
     {
         return Message::query()
-            ->where('sender_id', $this->userId)
-            ->orWhere('recipient_id', $this->userId)
-            ->where('message_id', $messageId)
-            ->firstOrFail();
+            ->where('chat_id', $chatId)
+            ->get()
+            ->toArray();
     }
 
-    public function showAllWithUser($projectId, $userId): Collection
+    /**
+     * @param string $content
+     * @param Chat $chat
+     * @param User $user
+     * @return Message|Model
+     */
+    public function send(string $content, Chat $chat, User $user): Message
     {
-        $inputMessages = Message::query()
-            ->where('project_id', $projectId)
-            ->where('sender_id', $userId)
-            ->where('recipient_id', $this->user->getAttribute('id'))
-            ->firstOrFail();
-
-        $outputMessages = Message::query()
-            ->where('project_id', $projectId)
-            ->where('sender_id', $this->user->getAttribute('id'))
-            ->where('recipient_id', $userId)
-            ->firstOrFail();
-
-        $messages = Collection::make($inputMessages)->push($outputMessages);
-        dd($messages);
-        return $messages;
-    }
-
-    public function showAllInProject($projectId): Collection
-    {
-        $inputMessages = Message::query()
-            ->where('project_id', $projectId)
-            ->where('sender_id', $this->userId)
-            ->firstOrFail();
-
-        $outputMessages = Message::query()
-            ->where('project_id', $projectId)
-            ->where('recipient_id', $this->userId)
-            ->firstOrFail();
-
-        $messages = Collection::make($inputMessages)->push($outputMessages);
-        dd($messages);
-        return $messages;
-    }
-
-    public function send(SendMessageRequest $request, $projectId, $userId)
-    {
-        $attributes = $request->validated();
-        $attributes[] = ['sender_id' => $this->userId];
-        $attributes[] = ['project_id' => $projectId];
-        $attributes[] = ['recipient_id' => $userId];
-
-        return Message::query()->create($attributes);
+        return Message::query()->create([
+            'chat_id' => $chat->id,
+            'content' => $content,
+            'user_id' => $user->id,
+        ]);
     }
 }

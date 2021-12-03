@@ -8,6 +8,7 @@ use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Exceptions\RoleDoesNotExist;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -44,17 +45,17 @@ class Handler extends ExceptionHandler
                 'error' => $e->getMessage(),
             ], Response::HTTP_UNAUTHORIZED);
         });
-        /*$this->renderable(function (HttpException $e) {
-            return response()->json([
-                'error' => $e->getMessage()],
-                $e->getStatusCode());
-        });*/
         $this->renderable(function (RoleDoesNotExist $e) {
             return response()->json([
                 'error' => $e->getMessage()
             ], Response::HTTP_NOT_FOUND);
         });
         $this->renderable(function (ValidationException $e) {
+            return response()->json([
+                'error' => $e->getMessage()
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        });
+        $this->renderable(function (UnprocessableEntityHttpException $e) {
             return response()->json([
                 'error' => $e->getMessage()
             ], Response::HTTP_UNPROCESSABLE_ENTITY);

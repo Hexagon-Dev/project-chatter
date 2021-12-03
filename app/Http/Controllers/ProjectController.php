@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use Spatie\Permission\Models\Permission;
+use Illuminate\Http\Request;
 
 class ProjectController extends Controller
 {
@@ -15,10 +16,10 @@ class ProjectController extends Controller
     {
         return Project::query()->where('id', $id);
     }
-    public function create()
+    public function create(Request $request)
     {
-        $project = Project::query()->create();
-        $projectId = $project->get('id');
-        Permission::create(['name' => 'project' . $projectId]);
+        $project = Project::query()->create($request->toArray());
+        Permission::create(['name' => 'project' . $project->id]);
+        return $project;
     }
 }

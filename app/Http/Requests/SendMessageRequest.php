@@ -4,6 +4,12 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * @property int $project_id
+ * @property string $chat_type
+ * @property int $chat_user_id
+ * @property string $msg_content
+ */
 class SendMessageRequest extends FormRequest
 {
     /**
@@ -24,8 +30,10 @@ class SendMessageRequest extends FormRequest
     public function rules()
     {
         return [
-            'recipient_id' => 'required',
-            'content' => 'required',
+            'msg_content' => 'required',
+            'chat_user_id' => 'numeric',
+            'chat_type' => 'required',
+            'project_id' => 'required',
         ];
     }
 }

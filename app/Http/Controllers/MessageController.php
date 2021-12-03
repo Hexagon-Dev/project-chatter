@@ -4,41 +4,62 @@ namespace App\Http\Controllers;
 
 use App\Contracts\Services\MessageServiceInterface;
 use App\Http\Requests\SendMessageRequest;
-use App\Models\User;
-use Illuminate\Support\Facades\DB;
-use Spatie\Permission\Models\Role;
+use App\Http\Requests\ShowMessageRequest;
+use App\Models\Project;
+
+use Illuminate\Auth\Access\AuthorizationException;
+use Throwable;
 
 class MessageController extends Controller
 {
     protected string $serviceInterface = MessageServiceInterface::class;
 
-    public function showOne($messageId)
+    /**
+     * @throws AuthorizationException
+     */
+    public function showAllWithUser(ShowMessageRequest $request, $projectId, $userId)
     {
-        return $this->service->showOne($messageId);
+        $type = $request->validated()['chat_type'];
+
+        /** @var Project $project */
+        $project = Project::query()->findOrFail($projectId);
+
+        $chat = $project->getChat($type, $userId);
+
+        $this->validateAccess($request->user(), $type, $projectId);
+
+        return $this->service->showAllWithUser($chat->id);
     }
 
-    public function showAllWithUser($projectId, $userId)
+    /**
+     * @throws AuthorizationException|Throwable
+     */
+    public function send(SendMessageRequest $request)
     {
-        $this->checkPermission($projectId);
+        $data = $request->validated();
+        $user = $request->user();
 
-        return $this->service->showAllWithUser($projectId, $userId);
+        /** @var Project $project */
+        $project = Project::query()->findOrFail($request->project_id);
+
+        $data['chat_user_id'] = $data['chat_user_id'] ?? null;
+
+        $chat = $project->getChat($data['chat_type'], $data['chat_user_id']);
+
+        $this->validateAccess($user, $data['chat_type'], $data['project_id']);
+
+        return $this->service->send($data['msg_content'], $chat, $user);
     }
 
-    public function showAllInProject($projectId)
+    /**
+     * @throws AuthorizationException
+     */
+    public function validateAccess($user, $type, $projectId): void
     {
-        $this->checkPermission($projectId);
+        $this->checkPermission($type);
 
-        return $this->service->showAllInProject($projectId);
-    }
-
-    public function send(SendMessageRequest $request, $projectId, $userId)
-    {
-        $role = DB::table('model_has_roles')->where('model_id', $userId)->get('role_id')->first();
-        $role = Role::findById($role->role_id);
-
-        $this->checkPermission($role->name);
-        $this->checkPermission('project' . $projectId);
-
-        return $this->service->send($request, $projectId, $userId);
+        if ($user->project_id != $projectId) {
+            throw new AuthorizationException('You don\'t have access to this project');
+        }
     }
 }

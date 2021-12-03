@@ -4,13 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Services\AbstractService;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Routing\Controller as BaseController;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class Controller extends BaseController
 {
@@ -24,6 +24,9 @@ class Controller extends BaseController
 
     protected ?AbstractService $service;
 
+    /**
+     * @throws BindingResolutionException
+     */
     public function __construct(?Authenticatable $user = null)
     {
         $this->user = $user;
@@ -32,18 +35,13 @@ class Controller extends BaseController
         }
     }
 
+    /**
+     * @throws AuthorizationException
+     */
     protected function checkPermission(string $operation): void
     {
-        if (!$this->user->can($operation)) {
-            dd($operation);
-            throw new HttpException(Response::HTTP_FORBIDDEN);
-        }
-    }
-
-    protected function checkRole(string $role): void
-    {
-        if (!$this->user->hasRole($role)) {
-            throw new HttpException(Response::HTTP_FORBIDDEN);
+        if ($this->user->cant($operation)) {
+            throw new AuthorizationException('You don\'t have access to ' . $operation);
         }
     }
 }
