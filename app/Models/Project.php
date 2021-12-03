@@ -28,18 +28,18 @@ class Project extends Model
     }
 
     /**
-     * @param ?string $type
+     * @param string $type
      * @param ?int $userID
      * @return Chat|Model
      * @throws Throwable
      */
-    public function getChat(?string $type, ?int $userID = null): Chat
+    public function getChat(string $type, ?int $userID = null): Chat
     {
         if (!in_array($type, Chat::TYPES, true)) {
             throw new UnprocessableEntityHttpException('Unrecognized type of chat');
         }
 
-        // Если юзер не указан - пишем в чат проекта
+        // Если юзер не указан - пишем в чат проекта, иначе проверяем можем ли мы писать пользователю и пишем
         if ($userID === null) {
             $userID = $this->id;
         } else {
