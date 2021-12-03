@@ -2,13 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\DB;
-use Spatie\Permission\Models\Role;
-use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Throwable;
 
 class Project extends Model
@@ -28,14 +24,13 @@ class Project extends Model
     }
 
     /**
-     * @param string $type
-     * @param ?int $userID
+     * @param int $projectId
      * @return Chat|Model
      * @throws Throwable
      */
-    public function getChat(string $type, ?int $userID = null): Chat
+    public function getChat(int $projectId, string $type): Chat
     {
-        if (!in_array($type, Chat::TYPES, true)) {
+        /*if (!in_array($type, Chat::TYPES, true)) {
             throw new UnprocessableEntityHttpException('Unrecognized type of chat');
         }
 
@@ -56,10 +51,11 @@ class Project extends Model
                 throw new AuthorizationException('You don\'t have permission to write this user');
             }
         }
+        */
 
         return $this->chats()->firstOrCreate([
             'type' => $type,
-            'chat_user_id' => $userID,
+            'project_id' => $projectId,
         ]);
     }
 }

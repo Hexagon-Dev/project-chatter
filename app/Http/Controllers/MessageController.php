@@ -15,18 +15,18 @@ class MessageController extends Controller
     protected string $serviceInterface = MessageServiceInterface::class;
 
     /**
-     * @throws AuthorizationException
+     * @throws AuthorizationException|Throwable
      */
-    public function showAllWithUser(ShowMessageRequest $request, $projectId, $userId)
+    public function showAllWithUser(ShowMessageRequest $request, $projectId)
     {
         $type = $request->validated()['chat_type'];
 
         /** @var Project $project */
         $project = Project::query()->findOrFail($projectId);
 
-        $chat = $project->getChat($type, $userId);
+        $chat = $project->getChat($projectId, $type);
 
-        $this->validateAccess($request->user(), $type, $projectId);
+        $this->validateAccess($type, $projectId);
 
         return $this->service->showAllWithUser($chat->id);
     }
@@ -46,7 +46,7 @@ class MessageController extends Controller
 
         $chat = $project->getChat($data['chat_type'], $data['chat_user_id']);
 
-        $this->validateAccess($user, $data['chat_type'], $data['project_id']);
+        $this->validateAccess($data['chat_type'], $data['project_id']);
 
         return $this->service->send($data['msg_content'], $chat, $user);
     }
@@ -54,11 +54,11 @@ class MessageController extends Controller
     /**
      * @throws AuthorizationException
      */
-    public function validateAccess($user, $type, $projectId): void
+    public function validateAccess($type, $projectId): void
     {
         $this->checkPermission($type);
 
-        if ($user->project_id != $projectId) {
+        if (auth()->user()->project_id != $projectId) {
             throw new AuthorizationException('You don\'t have access to this project');
         }
     }

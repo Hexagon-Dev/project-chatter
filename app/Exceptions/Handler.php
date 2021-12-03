@@ -4,6 +4,7 @@ namespace App\Exceptions;
 
 use Firebase\JWT\BeforeValidException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Support\ItemNotFoundException;
 use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Exceptions\RoleDoesNotExist;
 use Symfony\Component\HttpFoundation\Response;
@@ -47,18 +48,24 @@ class Handler extends ExceptionHandler
         });
         $this->renderable(function (RoleDoesNotExist $e) {
             return response()->json([
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], Response::HTTP_NOT_FOUND);
         });
         $this->renderable(function (ValidationException $e) {
             return response()->json([
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         });
         $this->renderable(function (UnprocessableEntityHttpException $e) {
             return response()->json([
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         });
+        $this->renderable(function (ItemNotFoundException $e) {
+            return response()->json([
+                'error' => $e->getMessage(),
+            ], Response::HTTP_NOT_FOUND);
+        });
+
     }
 }
